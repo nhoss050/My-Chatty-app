@@ -9,7 +9,7 @@ const PORT = 3001;
 
 const clients = [];
 
-//const colors = [red,blue,green,yellow];
+
 // Create a new express server
 const server = express()
    // Make the express server serve static assets (html, javascript, css) from the /public folder
@@ -24,106 +24,71 @@ const wss = new SocketServer({ server });
 // the ws parameter in the callback.
 
 wss.on('connection', (ws) => {
-  //console.log('Client connected');
 
-const colors = {
+// create and send color on connection
+  const colors = {
         type: "colors",
         colorcode:  getRandomColor(),
-      };
+  };
+
+  ws.send(JSON.stringify(colors));
 
 
-
-
-console.log("the colors object is:",colors)
-ws.send(JSON.stringify(colors));
-
-
-//------------------------------------------
+//creat number of online users and sed
   if (wss.clients.size === 1){
 
    let numberOfConnection = {
-        type: "connections",
-        number: `${wss.clients.size} user online`,
-      };
+       type: "connections",
+       number: `${wss.clients.size} user online`,
+    };
 
     wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(numberOfConnection));
-     // console.log("message was broadcasted",numberOfConnection);
-    }
-  });
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(numberOfConnection));
+      }
+    });
 
-   //console.log("yayyyyy",numberOfConnection)
   } else {
-      let numberOfConnection = {
+    let numberOfConnection = {
         type: "connections",
         number: `${wss.clients.size} users online`,
-      };
+    };
 
     wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(numberOfConnection));
-     // console.log("message was broadcasted",numberOfConnection);
-    }
-  });
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(numberOfConnection));
+      }
+    });
 
 
   };
 
 
 
-
-     // const numberOfConnection = {
-
-     //    type: "connections",
-     //    number: `${wss.clients.size} aecio online`
-     //  }
-
-
-
-
-
-  // wss.clients.forEach(function each(client) {
-  //   if (client.readyState === WebSocket.OPEN) {
-  //     client.send(JSON.stringify(numberOfConnection));
-  //    // console.log("message was broadcasted",numberOfConnection);
-  //   }
-  // });
-
-//------------------------------------------
-
-
-
   ws.on('message', function incoming(data) {
 
-
     const bcmessage = JSON.parse(data);
-    console.log("message received",bcmessage);
 
 
-    if(bcmessage["type"] === "postMessage") {
-          //console.log("message came in", bcmessage);
-        bcmessage["id"] = uuid.v1();
-        bcmessage["type"] = "incomingMessage";
+      if(bcmessage["type"] === "postMessage") {
 
-     console.log("correct one")
+          bcmessage["id"] = uuid.v1();
+          bcmessage["type"] = "incomingMessage";
+      }
 
-    }
+      if(bcmessage["type"] === "postNotification") {
 
-    if(bcmessage["type"] === "postNotification") {
-        //console.log("message came in", bcmessage);
-        bcmessage["type"] = "incomingNotification";
-        bcmessage["id"] = uuid.v1();
-        console.log("wrong one")
-    }
+          bcmessage["type"] = "incomingNotification";
+          bcmessage["id"] = uuid.v1();
+      }
 
 
-        wss.clients.forEach(function each(client) {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(bcmessage));
-            console.log("message was broadcasted",bcmessage);
-          }
-        });
+      wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(bcmessage));
+          onsole.log("message was broadcasted",bcmessage);
+        }
+      });
 
   });
 
@@ -133,34 +98,32 @@ ws.send(JSON.stringify(colors));
 
   ws.on('close', () => {
 
-     if (wss.clients.size === 1){
+    if (wss.clients.size === 1){
 
-   let numberOfConnection = {
-        type: "connections",
-        number: `${wss.clients.size} user online`,
-      };
-
-    wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(numberOfConnection));
-     // console.log("message was broadcasted",numberOfConnection);
-    }
-  });
-
-   //console.log("yayyyyy",numberOfConnection)
-  } else {
       let numberOfConnection = {
-        type: "connections",
-        number: `${wss.clients.size} users online`,
+          type: "connections",
+          number: `${wss.clients.size} user online`,
       };
 
-    wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(numberOfConnection));
-     // console.log("message was broadcasted",numberOfConnection);
+      wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(numberOfConnection));
+        }
+      });
+
+
+    } else {
+      let numberOfConnection = {
+          type: "connections",
+          number: `${wss.clients.size} users online`,
+      };
+
+      wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+         client.send(JSON.stringify(numberOfConnection));
+       }
+      });
     }
-  });
-  }
 
 
 
