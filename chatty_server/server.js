@@ -74,6 +74,22 @@ wss.on('connection', (ws) => {
 
           bcmessage["id"] = uuid.v1();
           bcmessage["type"] = "incomingMessage";
+          bcmessage["image"] = "";
+
+          if(bcmessage["content"].includes("gif") || bcmessage["content"].includes("png") || bcmessage["content"].includes("jpg"))
+          {
+
+            let myurls = bcmessage["content"].match(/\b(http|https)?(:\/\/)?(\S*)\.(\w{2,4})\b/ig);
+            bcmessage["content"] = bcmessage["content"].replace(myurls[0], "");
+            bcmessage["image"] = myurls[0];
+
+
+          }
+
+
+
+
+
       }
 
       if(bcmessage["type"] === "postNotification") {
@@ -86,7 +102,7 @@ wss.on('connection', (ws) => {
       wss.clients.forEach(function each(client) {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(bcmessage));
-          onsole.log("message was broadcasted",bcmessage);
+
         }
       });
 

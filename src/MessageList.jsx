@@ -23,6 +23,7 @@ class MessageList extends Component {
                   messagesHere = {msg.content}
                   messagesType = {msg.type}
                   userColor = {msg.color}
+                  messagesImage = {msg.photo}
 
 
                 />
