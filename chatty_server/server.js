@@ -22,6 +22,23 @@ const wss = new SocketServer({ server });
 // Set up a callback that will run when a client connects to the server
 // When a client connects they are assigned a socket, represented by
 // the ws parameter in the callback.
+function broadcast(data) {
+  wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(data));
+    }
+  });
+}
+
+function updateOnlineUsers() {
+  let clientCount = wss.clients.size;
+  let clientString = `${wss.clients.size} user${clientCount === 1 ? "" : "s"} online`;
+
+  broadcast({
+    type: "connections",
+    number: clientString
+  });
+}
 
 wss.on('connection', (ws) => {
 
@@ -33,30 +50,7 @@ wss.on('connection', (ws) => {
 
   ws.send(JSON.stringify(colors));
 
-  //creat number of online users and sed
-  if (wss.clients.size === 1) {
-    let numberOfConnection = {
-      type: "connections",
-      number: `${wss.clients.size} user online`,
-    };
-
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(numberOfConnection));
-      }
-    });
-  } else {
-    let numberOfConnection = {
-        type: "connections",
-        number: `${wss.clients.size} users online`,
-    };
-
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(numberOfConnection));
-      }
-    });
-  };
+  updateOnlineUsers();
   
   ws.on('message', function incoming(data) {
     const bcmessage = JSON.parse(data);
@@ -78,39 +72,12 @@ wss.on('connection', (ws) => {
       bcmessage["id"] = uuid.v1();
     }
 
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(bcmessage));
-
-      }
-    });
+    broadcast()
   });
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   ws.on('close', () => {
-    if (wss.clients.size === 1) {
-      let numberOfConnection = {
-          type: "connections",
-          number: `${wss.clients.size} user online`,
-      };
-
-      wss.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(numberOfConnection));
-        }
-      });
-    } else {
-      let numberOfConnection = {
-          type: "connections",
-          number: `${wss.clients.size} users online`,
-      };
-
-      wss.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-         client.send(JSON.stringify(numberOfConnection));
-       }
-      });
-    }
+    updateOnlineUsers();
   });
 });
 
