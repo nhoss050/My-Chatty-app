@@ -32,7 +32,7 @@ function broadcast(data) {
 
 function updateOnlineUsers() {
   let clientCount = wss.clients.size;
-  let clientString = `${wss.clients.size} user${clientCount === 1 ? "" : "s"} online`;
+  let clientString = `${clientCount} user${clientCount === 1 ? "" : "s"} online`;
 
   broadcast({
     type: "connections",
@@ -72,7 +72,7 @@ wss.on('connection', (ws) => {
       bcmessage["id"] = uuid.v1();
     }
 
-    broadcast()
+    broadcast(bcmessage);
   });
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
