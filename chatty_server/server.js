@@ -25,21 +25,19 @@ const wss = new SocketServer({ server });
 
 wss.on('connection', (ws) => {
 
-// create and send color on connection
+  // create and send color on connection
   const colors = {
-        type: "colors",
-        colorcode:  getRandomColor(),
+    type: "colors",
+    colorcode:  getRandomColor(),
   };
 
   ws.send(JSON.stringify(colors));
 
-
-//creat number of online users and sed
-  if (wss.clients.size === 1){
-
-   let numberOfConnection = {
-       type: "connections",
-       number: `${wss.clients.size} user online`,
+  //creat number of online users and sed
+  if (wss.clients.size === 1) {
+    let numberOfConnection = {
+      type: "connections",
+      number: `${wss.clients.size} user online`,
     };
 
     wss.clients.forEach(function each(client) {
@@ -47,7 +45,6 @@ wss.on('connection', (ws) => {
         client.send(JSON.stringify(numberOfConnection));
       }
     });
-
   } else {
     let numberOfConnection = {
         type: "connections",
@@ -59,63 +56,39 @@ wss.on('connection', (ws) => {
         client.send(JSON.stringify(numberOfConnection));
       }
     });
-
-
   };
-
-
-
+  
   ws.on('message', function incoming(data) {
-
     const bcmessage = JSON.parse(data);
+    if(bcmessage["type"] === "postMessage") {
 
+      bcmessage["id"] = uuid.v1();
+      bcmessage["type"] = "incomingMessage";
+      bcmessage["image"] = "";
 
-      if(bcmessage["type"] === "postMessage") {
+      if(bcmessage["content"].includes("gif") || bcmessage["content"].includes("png") || bcmessage["content"].includes("jpg")) {
+        let myurls = bcmessage["content"].match(/\b(http|https)?(:\/\/)?(\S*)\.(\w{2,4})\b/ig);
+        bcmessage["content"] = bcmessage["content"].replace(myurls[0], "");
+        bcmessage["image"] = myurls[0];
+      }
+    }
+    
+    if(bcmessage["type"] === "postNotification") {
+      bcmessage["type"] = "incomingNotification";
+      bcmessage["id"] = uuid.v1();
+    }
 
-          bcmessage["id"] = uuid.v1();
-          bcmessage["type"] = "incomingMessage";
-          bcmessage["image"] = "";
-
-          if(bcmessage["content"].includes("gif") || bcmessage["content"].includes("png") || bcmessage["content"].includes("jpg"))
-          {
-
-            let myurls = bcmessage["content"].match(/\b(http|https)?(:\/\/)?(\S*)\.(\w{2,4})\b/ig);
-            bcmessage["content"] = bcmessage["content"].replace(myurls[0], "");
-            bcmessage["image"] = myurls[0];
-
-
-          }
-
-
-
-
+    wss.clients.forEach(function each(client) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(bcmessage));
 
       }
-
-      if(bcmessage["type"] === "postNotification") {
-
-          bcmessage["type"] = "incomingNotification";
-          bcmessage["id"] = uuid.v1();
-      }
-
-
-      wss.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify(bcmessage));
-
-        }
-      });
-
+    });
   });
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
-
-
-
   ws.on('close', () => {
-
-    if (wss.clients.size === 1){
-
+    if (wss.clients.size === 1) {
       let numberOfConnection = {
           type: "connections",
           number: `${wss.clients.size} user online`,
@@ -126,8 +99,6 @@ wss.on('connection', (ws) => {
         client.send(JSON.stringify(numberOfConnection));
         }
       });
-
-
     } else {
       let numberOfConnection = {
           type: "connections",
@@ -140,13 +111,8 @@ wss.on('connection', (ws) => {
        }
       });
     }
-
-
-
   });
-
 });
-
 
 function getRandomColor() {
     var letters = '0123456789ABCDEF';
